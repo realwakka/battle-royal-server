@@ -5,8 +5,7 @@ use futures_util::{FutureExt, StreamExt};
 async fn main() {
     let port : u16 = std::env::var("PORT").expect("no port env").parse().expect("failed to parse port");
 
-    let route = warp::path("/")
-	.and(warp::fs::dir("frontend/dist"));
+    let route = warp::fs::dir("frontend/dist");
 
     // let hello = warp::path!("hello" / String)
     //     .map(|name| format!("Hello, {}!", name));
