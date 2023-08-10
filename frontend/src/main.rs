@@ -1,28 +1,46 @@
 //! This example demonstrates Bevy's immediate mode drawing API intended for visual debugging.
 
 use std::f32::consts::PI;
-
 use bevy::prelude::*;
+
+#[derive(Component)]
+struct Player {
+    position: Vec2,
+    direction: Vec2,    
+}
+
+#[derive(Component)]
+struct MyGameCamera;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, setup)
-        .add_systems(Update, (system, update_config))
+        .add_systems(Update, (system, update_config, update_body))
         .run();
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(Camera2dBundle::default());
-    // text
-    commands.spawn(TextBundle::from_section(
-        "Hold 'Left' or 'Right' to change the line width",
-        TextStyle {
-            font: asset_server.load("fonts/FiraMono-Medium.ttf"),
-            font_size: 24.,
-            color: Color::WHITE,
-        },
-    ));
+    commands.spawn((Camera2dBundle::default(), MyGameCamera));
+    // // text
+    // commands.spawn(TextBundle::from_section(
+    //     "Hold 'Left' or 'Right' to change the line width",
+    //     TextStyle {
+    //         font: asset_server.load("fonts/FiraMono-Medium.ttf"),
+    //         font_size: 24.,
+    //         color: Color::WHITE,
+    //     },
+    // ));
+
+    commands
+	.spawn(Player { position: Vec2::ZERO, direction: Vec2::ZERO })
+	.insert(TransformBundle::default());
+    
+}
+
+fn update_body(mut gizmos: Gizmos, mut query: Query<(&mut Player, &Transform)>) {
+    let (player, _transform) = query.single_mut();
+    gizmos.circle_2d(player.position, 100., Color::PURPLE);
 }
 
 fn system(mut gizmos: Gizmos, time: Res<Time>) {
@@ -45,21 +63,30 @@ fn system(mut gizmos: Gizmos, time: Res<Time>) {
         Color::BLACK,
     );
 
-    // The circles have 32 line-segments by default.
     gizmos.circle_2d(Vec2::ZERO, 120., Color::BLACK);
-    // You may want to increase this for larger circles.
     gizmos.circle_2d(Vec2::ZERO, 300., Color::NAVY).segments(64);
-
-    // Arcs default amount of segments is linerarly interpolated between
-    // 1 and 32, using the arc length as scalar.
     gizmos.arc_2d(Vec2::ZERO, sin / 10., PI / 2., 350., Color::ORANGE_RED);
 }
 
-fn update_config(mut config: ResMut<GizmoConfig>, keyboard: Res<Input<KeyCode>>, time: Res<Time>) {
+fn update_config(mut config: ResMut<GizmoConfig>, keyboard: Res<Input<KeyCode>>, time: Res<Time>,
+		 mut query: Query<&mut Player>, mut q: Query<&mut Transform, With<MyGameCamera>>,) {
+
+    let mut player = query.single_mut();
     if keyboard.pressed(KeyCode::Right) {
-        config.line_width += 5. * time.delta_seconds();
+	player.position.x += 1.0;
     }
     if keyboard.pressed(KeyCode::Left) {
-        config.line_width -= 5. * time.delta_seconds();
+	player.position.x -= 1.0;
     }
+
+    if keyboard.pressed(KeyCode::Up) {
+	player.position.y += 1.0;
+    }
+    if keyboard.pressed(KeyCode::Down) {
+	player.position.y -= 1.0;
+    }
+
+    let mut t = q.single_mut();
+    t.translation.x = player.position.x;
+    t.translation.y = player.position.y;
 }
