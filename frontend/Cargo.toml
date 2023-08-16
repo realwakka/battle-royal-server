@@ -7,3 +7,8 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.11"
+gloo-net = { version = "0.3.1", features = ["websocket"] }
+wasm-bindgen-futures = "0.4.33"
+futures = "0.3.28"
+serde_json = "1.0.104"
+serde = { version = "1.0", features = ["derive"] }
